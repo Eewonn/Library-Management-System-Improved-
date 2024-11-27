@@ -24,10 +24,9 @@ CREATE TABLE users (
     password TEXT NOT NULL
 );
 
-INSERT INTO users (username, password) VALUES ('admin', '123');
 
-SELECT * FROM users;
-
-
+DELETE FROM books;
+DELETE FROM authors;
+DELETE FROM sqlite_sequence;
 
 
