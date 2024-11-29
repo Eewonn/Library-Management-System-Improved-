@@ -1,30 +1,56 @@
 package com.library.management.classes;
 
-import com.library.management.database.*;
-import java.sql.*;
+import com.library.management.database.databaseConnection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Member extends Person {
-    private List<String> borrowedBooks;  // List of book titles as strings
+    private int memberId;               // Member ID field
+    private List<String> borrowedBooks; // List of book titles as strings
 
-    // Constructor
-    public Member(int memberId2, String name, String borrowedBooks2) {
+    // Constructor for memberId and name
+    public Member(int memberId, String name) {
         super(name); // Assuming Person has a constructor that accepts name
+        this.memberId = memberId;
         this.borrowedBooks = new ArrayList<>();
     }
 
+    // Constructor for name only
     public Member(String name) {
-   
+        super(name); // Calling the Person constructor
+        this.borrowedBooks = new ArrayList<>();
+    }
+
+    // Constructor for all fields (used in your original code)
+    public Member(int memberId, String name, String borrowedBooksStr) {
+        super(name); // Assuming Person has a constructor that accepts name
+        this.memberId = memberId;
+        this.borrowedBooks = new ArrayList<>();
+        if (borrowedBooksStr != null) {
+            String[] booksArray = borrowedBooksStr.split(", ");
+            for (String bookTitle : booksArray) {
+                this.borrowedBooks.add(bookTitle);
+            }
+        }
+    }
+
+    // Getter for memberId
+    public int getMemberId() {
+        return memberId;
+    }
+
+    // Setter for memberId
+    public void setMemberId(int memberId) {
+        this.memberId = memberId;
     }
 
     // Getter for borrowedBooks
     public List<String> getBorrowedBooks() {
         return borrowedBooks;
-    }
-
-    // Setter for memberId
-    public void setMemberId(int memberId) {
     }
 
     // Method to load member data from the database
@@ -36,16 +62,16 @@ public class Member extends Person {
                        "LEFT JOIN Books b ON bb.book_id = b.book_id " +
                        "WHERE m.member_id = ? " +
                        "GROUP BY m.member_id, m.member_name";
-        
+
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, memberId);
             ResultSet rs = stmt.executeQuery();
-            
+
             if (rs.next()) {
                 setMemberId(rs.getInt("memberID"));
                 setName(rs.getString("memberName"));
-                
+
                 // Split the concatenated book titles into a list
                 String borrowedBooksStr = rs.getString("borrowedBooks");
                 if (borrowedBooksStr != null) {
@@ -58,11 +84,6 @@ public class Member extends Person {
         } catch (SQLException e) {
             System.err.println("Error loading member from database: " + e.getMessage());
         }
-    }
-
-    @Override
-    public String toString() {
-        return getName();
     }
 
     // Method to borrow a book
@@ -85,7 +106,18 @@ public class Member extends Person {
         }
     }
 
-	public int getMemberId() {
-		throw new UnsupportedOperationException("Unimplemented method 'getMemberId'");
-	}
+    @Override
+    public String toString() {
+        return getName(); // Ensures only the member's name is displayed
+    }
+
+    /*@Override
+    public String toString() {
+        return "Member{" +
+                "memberId=" + memberId +
+                ", name='" + getName() + '\'' +
+                ", borrowedBooks=" + borrowedBooks +
+                '}';
+    }*/
+    
 }
