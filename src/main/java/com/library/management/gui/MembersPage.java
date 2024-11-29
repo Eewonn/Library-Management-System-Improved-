@@ -42,7 +42,7 @@ public class MembersPage extends LibraryDashboard {
     // GUI SET UP METHODS
     private void setupUI() {
         JPanel mainPanel = new JPanel(new BorderLayout());
-        String[] columnNames = {"Member Name"};
+        String[] columnNames = {"Member ID", "Member Name", "Borrowed Books"};
         tableModel = new DefaultTableModel(columnNames, 0);
         membersTable = createMembersTable();
 
@@ -164,29 +164,33 @@ public class MembersPage extends LibraryDashboard {
             if (validateInputs()) {
                 if (action.equals("Add")) {
                     addMember();
-                } else {
-                    updateMember(member);
-                }
-                dialog.dispose();
-            }
-        });
-        confirmButton.setBackground(THEME_COLOR);
-        confirmButton.setForeground(Color.WHITE);
-
-        gbc.gridx = 0;
-        gbc.gridy = labels.length;
-        gbc.gridwidth = 2;
-        dialog.add(confirmButton, gbc);
-
-        dialog.setBackground(themeColor);
-        dialog.setForeground(darkerThemeColor);
-
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
-    }
-
-    // Input Validation Methods
+                                    } else {
+                                        updateMember(member);
+                                    }
+                                    dialog.dispose();
+                                }
+                            });
+                            confirmButton.setBackground(THEME_COLOR);
+                            confirmButton.setForeground(Color.WHITE);
+                    
+                            gbc.gridx = 0;
+                            gbc.gridy = labels.length;
+                            gbc.gridwidth = 2;
+                            dialog.add(confirmButton, gbc);
+                    
+                            dialog.setBackground(themeColor);
+                            dialog.setForeground(darkerThemeColor);
+                    
+                            dialog.pack();
+                            dialog.setLocationRelativeTo(this);
+                            dialog.setVisible(true);
+                        }
+                    
+                        private void addMember() {
+                            throw new UnsupportedOperationException("Unimplemented method 'addMember'");
+                        }
+                    
+                        // Input Validation Methods
     private boolean validateInputs() {
         String name = inputFields.get(0).getText();
         if (name.isEmpty()) {
@@ -198,77 +202,97 @@ public class MembersPage extends LibraryDashboard {
 
     // Database Methods (if applicable)
     private void loadMembersFromDatabase() {
-    String sql = "SELECT member_name FROM members"; // Adjust the SQL query as per your database schema
-    try (Connection conn = databaseConnection.getConnection(); // Assuming you have a method to get a DB connection
-         PreparedStatement pstmt = conn.prepareStatement(sql);
-         ResultSet rs = pstmt.executeQuery()) {
+        String sql = "SELECT m.member_id, m.member_name, GROUP_CONCAT(b.title, ', ') AS borrowed_books " +
+                     "FROM members m " +
+                     "LEFT JOIN BorrowedBooks bb ON m.member_id = bb.member_id " +
+                     "LEFT JOIN Books b ON bb.book_id = b.book_id " +
+                     "GROUP BY m.member_id, m.member_name"; // Update query to get borrowed books
+        try (Connection conn = databaseConnection.getConnection(); // Assuming you have a method to get a DB connection
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
 
-        while (rs.next()) {
-            String memberName = rs.getString("member_name");
-            Member member = new Member(memberName); // Assuming Member has a constructor that accepts name
-            memberList.add(member);
-            tableModel.addRow(new Object[]{memberName}); // Add member name to table model
+            while (rs.next()) {
+                int memberId = rs.getInt("member_id");
+                String memberName = rs.getString("member_name");
+                String borrowedBooks = rs.getString("borrowed_books");
+
+                // Create Member and display in the table
+                memberList.add(new Member(memberId, memberName, borrowedBooks));
+                tableModel.addRow(new Object[]{memberId, memberName, borrowedBooks}); // Add member data to the table
+            }
+        } catch (SQLException e) {
+            showError("Error loading members from database: " + e.getMessage());
         }
-    } catch (SQLException e) {
-        showError("Error loading members from database: " + e.getMessage());
+    }
+
+// Update member in the table and database
+private void updateMember(Member member) {
+    int selectedRow = membersTable.getSelectedRow();
+    if (selectedRow != -1) {
+        String name = inputFields.get(0).getText();
+        member.setName(name); // Assuming setName method exists in Member class
+        tableModel.setValueAt(name, selectedRow, 1);
+
+        // Update the member in the database
+        updateMemberInDatabase(member);
+        clearFields();
+    } else {
+        showError("Please select a member to update");
     }
 }
 
-    // Add member to the table
-    private void addMember() {
-        if (validateInputs()) {
-            String name = inputFields.get(0).getText();
-            Member newMember = new Member(name);
-            memberList.add(newMember);
-            tableModel.addRow(new Object[]{name});
-            insertMemberIntoDatabase(newMember);
-            clearFields();
-        }
-    }
+// Remove member from the table and database
+private void removeMember() {
+    int selectedRow = membersTable.getSelectedRow();
+    if (selectedRow != -1) {
+        Member memberToRemove = memberList.get(selectedRow);
 
-    // Update member in the table
-    private void updateMember(Member member) {
-        int selectedRow = membersTable.getSelectedRow();
-        if (selectedRow != -1) {
-            String name = inputFields.get(0).getText();
-            memberList.get(selectedRow).setName(name); // Assuming setName method exists in Member class
-            tableModel.setValueAt(name, selectedRow, 0);
-            clearFields();
-        } else {
-            showError("Please select a member to update");
+        // Remove from database
+        if (removeMemberFromDatabase(memberToRemove)) {
+            memberList.remove(selectedRow); // Remove from list
+            tableModel.removeRow(selectedRow); // Remove from table
         }
+    } else {
+        showError("Please select a member to remove");
     }
+}
 
-    // Remove member from the table
-    private void removeMember() {
-        int selectedRow = membersTable.getSelectedRow();
-        if (selectedRow != -1) {
-            memberList.remove(selectedRow);
-            tableModel.removeRow(selectedRow);
-        } else {
-            showError("Please select a member to remove");
-        }
-    }
-
-    // Database Methods
-    private void insertMemberIntoDatabase(Member member) {
-    String sql = "INSERT INTO members (member_name) VALUES (?)";
-    try (Connection conn = databaseConnection.getConnection(); // Assuming you have a method to get a DB connection
+// Update member in database
+private void updateMemberInDatabase(Member member) {
+    String sql = "UPDATE members SET member_name = ? WHERE member_id = ?";
+    try (Connection conn = databaseConnection.getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
         pstmt.setString(1, member.getName());
+        pstmt.setInt(2, member.getMemberId());
         pstmt.executeUpdate();
     } catch (SQLException e) {
-        showError("Error adding member to database: " + e.getMessage());
+        showError("Error updating member in database: " + e.getMessage());
     }
 }
 
-    // Utility Methods
+// Remove member from database
+private boolean removeMemberFromDatabase(Member member) {
+    String sql = "DELETE FROM members WHERE member_id = ?";
+    try (Connection conn = databaseConnection.getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        pstmt.setInt(1, member.getMemberId());
+        pstmt.executeUpdate();
+        return true;
+    } catch (SQLException e) {
+        showError("Error removing member from database: " + e.getMessage());
+        return false;
+    }
+}
+
+
+    // Clear input fields
     private void clearFields() {
         for (JTextField field : inputFields) {
             field.setText("");
         }
     }
 
+    // Show error message
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
