@@ -6,13 +6,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Member extends Person {
-    private int memberId;
     private List<String> borrowedBooks;  // List of book titles as strings
 
     // Constructor
-    public Member(String name) {
+    public Member(int memberId2, String name, String borrowedBooks2) {
         super(name); // Assuming Person has a constructor that accepts name
         this.borrowedBooks = new ArrayList<>();
+    }
+
+    public Member(String name) {
+   
     }
 
     // Getter for borrowedBooks
@@ -22,7 +25,6 @@ public class Member extends Person {
 
     // Setter for memberId
     public void setMemberId(int memberId) {
-        this.memberId = memberId;
     }
 
     // Method to load member data from the database
@@ -82,4 +84,8 @@ public class Member extends Person {
             System.out.println("You have not borrowed this book.");
         }
     }
+
+	public int getMemberId() {
+		throw new UnsupportedOperationException("Unimplemented method 'getMemberId'");
+	}
 }

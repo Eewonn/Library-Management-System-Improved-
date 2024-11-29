@@ -91,7 +91,7 @@ INSERT INTO Authors (name) VALUES
 
 -- Insert books with valid author_id
 INSERT INTO Books (title, author_id, ISBN, publication_date, available_copies) VALUES
-('Harry Potter and the Sorcerer\'s Stone', 1, '9780747532743', '1997-06-26', 10),
+('Harry Potter and the Sorcerers Stone', 1, '9780747532743', '1997-06-26', 10),
 ('A Game of Thrones', 2, '9780553103540', '1996-08-06', 5),
 ('The Hobbit', 3, '9780007458424', '1937-09-21', 8),
 ('Murder on the Orient Express', 4, '9780062693662', '1934-01-01', 6),
@@ -107,8 +107,10 @@ INSERT INTO Books (title, author_id, ISBN, publication_date, available_copies) V
 ('War and Peace', 14, '9780307266934', '1869-03-01', 3),
 ('The Great Gatsby', 15, '9780743273565', '1925-04-10', 10);
 
+INSERT INTO Books (title, author_id, ISBN, publication_date, available_copies) VALUES
+('Harry Potter and the Sorcerers Stone', 16, '9780747532747', '1997-06-26', 10);
+
 -- Members Data
--- Note: Added new sample members with some borrowing data
 INSERT INTO members (member_name) VALUES
 ('John Doe'),
 ('Jane Smith'),
@@ -163,15 +165,16 @@ INSERT INTO BorrowedBooks (member_id, book_id, borrow_date, return_date) VALUES
 (14, 14, '2024-11-07', '2024-11-21'),
 (15, 15, '2024-11-10', '2024-11-24');
 
-
-
+-- View for displaying member details with borrowed books, borrow dates, and return dates
 DROP VIEW IF EXISTS member_details_view;
 
 CREATE VIEW IF NOT EXISTS member_details_view AS
 SELECT 
     m.member_id, 
     m.member_name, 
-    GROUP_CONCAT(b.title, ', ') AS borrowed_books
+    GROUP_CONCAT(b.title, ', ') AS borrowed_books,
+    GROUP_CONCAT(bb.borrow_date, ', ') AS borrow_dates,
+    GROUP_CONCAT(bb.return_date, ', ') AS return_dates
 FROM 
     members m
 LEFT JOIN 
@@ -181,8 +184,7 @@ LEFT JOIN
 GROUP BY 
     m.member_id, m.member_name;
 
+-- Queries to test the tables and view
 SELECT * FROM BorrowedBooks;
-
 SELECT * FROM Books;
-
 SELECT * FROM member_details_view;
