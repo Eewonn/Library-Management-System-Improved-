@@ -188,3 +188,17 @@ GROUP BY
 SELECT * FROM BorrowedBooks;
 SELECT * FROM Books;
 SELECT * FROM member_details_view;
+
+
+-- Correct Duplicate Book Entry
+DELETE FROM Books WHERE author_id = 16;
+
+-- Enhance Members Table
+ALTER TABLE members ADD COLUMN email TEXT UNIQUE;
+ALTER TABLE members ADD COLUMN phone TEXT UNIQUE;
+
+-- Ensure Unique Usernames in Users Table
+CREATE UNIQUE INDEX idx_unique_username ON users(username);
+
+-- Fix View for Member Details
+DROP VIEW IF EXISTS member_details_view;
