@@ -15,13 +15,14 @@ import java.util.List;
 
 public class TransactionsPage extends LibraryDashboard {
     // Static Attributes
-    private static final Color THEME_COLOR = new Color(60, 106, 117);
+    //private static final Color THEME_COLOR = new Color(60, 106, 117);
     private static final Color TABLE_TEXT_COLOR = Color.WHITE;
     private static final Color TABLE_HEADER_COLOR = new Color(60, 106, 117);
     private static final Color TABLE_BACKGROUND_COLOR = new Color(60, 106, 117);
     private static final Color BUTTON_COLOR = new Color(80, 120, 130);
     private static final Color COMBOBOX_COLOR = new Color(240, 240, 240);
     
+
     // Attributes
     private JComboBox<Book> booksComboBox;
     private JComboBox<Member> membersComboBox;
@@ -230,4 +231,4 @@ public class TransactionsPage extends LibraryDashboard {
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 16));
         return table;
     }
-}
+} 

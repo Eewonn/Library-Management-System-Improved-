@@ -202,3 +202,62 @@ CREATE UNIQUE INDEX idx_unique_username ON users(username);
 
 -- Fix View for Member Details
 DROP VIEW IF EXISTS member_details_view;
+
+-- Transaction Table
+CREATE TABLE IF NOT EXISTS Transactions (
+    transaction_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    member_id INTEGER NOT NULL,
+    book_id INTEGER NOT NULL,
+    borrow_date TEXT NOT NULL DEFAULT CURRENT_DATE,
+    due_date TEXT NOT NULL,
+    return_date TEXT,
+    fine_amount REAL DEFAULT 0.0 CHECK (fine_amount >= 0),
+    status TEXT NOT NULL CHECK (status IN ('Borrowed', 'Returned', 'Overdue')),
+    FOREIGN KEY (member_id) REFERENCES Members (member_id) ON DELETE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES Books (book_id) ON DELETE CASCADE
+);
+
+-- Trigger to calculate fines after a book is returned late
+CREATE TRIGGER IF NOT EXISTS calculate_fine_after_return
+AFTER UPDATE OF return_date ON Transactions
+WHEN NEW.return_date > NEW.due_date
+BEGIN
+    UPDATE Transactions
+    SET fine_amount = (JULIANDAY(NEW.return_date) - JULIANDAY(NEW.due_date)) * 1.0 -- Fine rate: $1 per day
+    WHERE transaction_id = NEW.transaction_id;
+END;
+
+-- Trigger to mark a transaction as "Overdue" when the due date passes
+CREATE TRIGGER IF NOT EXISTS mark_as_overdue
+AFTER UPDATE OF due_date ON Transactions
+WHEN NEW.return_date IS NULL AND NEW.due_date < DATE('now')
+BEGIN
+    UPDATE Transactions
+    SET status = 'Overdue'
+    WHERE transaction_id = NEW.transaction_id;
+END;
+
+-- Trigger to reset sequence after deleting a transaction
+CREATE TRIGGER IF NOT EXISTS reset_transactions_sequence
+AFTER DELETE ON Transactions
+BEGIN
+    UPDATE sqlite_sequence
+    SET seq = (SELECT MAX(transaction_id) FROM Transactions)
+    WHERE name = 'Transactions';
+END;
+
+-- Sample Data for Transactions
+INSERT INTO Transactions (member_id, book_id, borrow_date, due_date, return_date, status) VALUES
+(1, 1, '2024-11-01', '2024-11-15', NULL, 'Borrowed'), -- John Doe borrowed a book
+(2, 2, '2024-11-02', '2024-11-16', '2024-11-18', 'Returned'), -- Jane Smith returned the book late
+(3, 3, '2024-11-10', '2024-11-24', NULL, 'Borrowed'); -- Marked for overdue testing
+
+-- Query to Check Transactions
+SELECT * FROM Transactions;
+
+-- Query to Verify Fines for Returned Books
+SELECT transaction_id, member_id, book_id, fine_amount
+FROM Transactions
+WHERE return_date IS NOT NULL;
+
+SELECT * FROM Members;

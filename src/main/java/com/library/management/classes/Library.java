@@ -1,3 +1,4 @@
+
 package com.library.management.classes;
 
 import com.library.management.database.databaseConnection;
@@ -7,34 +8,107 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import java.util.Map;
+import java.util.HashMap;
+
+
 import java.time.LocalDate;
 
 public class Library {
+    private JComboBox<Book> bookComboBox;
+    private JComboBox<Member> memberComboBox;
+    private JTable transactionTable;
     private List<Book> books;
     private List<Member> members;
-    
-    // Constructor
+    private Map<Member, Book> borrowedBooks = new HashMap<>();
+
+
     public Library() throws SQLException { 
         try {
             this.books = getAllBooksFromDatabase();
             this.members = getAllMembersFromDatabase();
+            
+            // Initialize combo boxes and table
+            bookComboBox = new JComboBox<>(new DefaultComboBoxModel<>(books.toArray(new Book[0])));
+            memberComboBox = new JComboBox<>(new DefaultComboBoxModel<>(members.toArray(new Member[0])));
+            transactionTable = new JTable();
             System.out.println("Library initialized with " + books.size() + " books and " + members.size() + " members.");
         } catch (SQLException e) {
             System.err.println("Error initializing Library: " + e.getMessage());
-            throw e; // Ensure the exception propagates for visibility
+            throw e;
         }
     }
 
+    public class TransactionTableModel extends AbstractTableModel {
+        private List<Object[]> transactions;
+        private String[] columnNames = {"Transaction Type", "Member Name", "Book Title", "Borrow Date"};
+        
+        public TransactionTableModel(List<Object[]> transactions) {
+            this.transactions = transactions;
+        }
+
+        @Override
+        public int getRowCount() {
+            return transactions.size();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return columnNames.length;
+        }
+
+        @Override
+        public String getColumnName(int columnIndex) {
+            return columnNames[columnIndex];
+        }
+
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            Object[] row = transactions.get(rowIndex);
+            return row[columnIndex];
+        }
+    }
+
+
     // Getters
-    public List<Book> getAllBooks() throws SQLException{
+    public List<Book> getAllBooks() throws SQLException {
         return new ArrayList<>(books);
     }
 
-    public List<Member> getAllMembers() throws SQLException{
+    public List<Member> getAllMembers() throws SQLException {
         return new ArrayList<>(members);
     }
 
-    
+    // Method to update a book's available copies
+    public void updateBook(Book book) throws SQLException {
+        String sql = "UPDATE Books SET available_copies = ? WHERE book_id = ?";
+        try (Connection conn = databaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, book.getAvailableCopies());
+            pstmt.setInt(2, book.getBookId());
+            pstmt.executeUpdate();
+
+            // Update the book in the list as well
+            for (Book b : books) {
+                if (b.getBookId() == book.getBookId()) {
+                    b.setAvailableCopies(book.getAvailableCopies());
+                    System.out.println("Book updated in the library.");
+                    return;
+                }
+            }
+            // If the book was not found in the list (for some reason)
+            System.out.println("Book not found in the current library list.");
+        } catch (SQLException e) {
+            System.err.println("Error updating book in database: " + e.getMessage());
+            throw e; // Rethrow the exception
+        }
+    }
+
     // Methods to add and remove books
     public void addBook(Book book) {
         if (!books.contains(book)) {
@@ -77,36 +151,13 @@ public class Library {
         }
     }
 
-    // Borrow a book for a member
-    public boolean borrowBook(Member member, Book book) {
-        if (books.contains(book) && book.getAvailableCopies() > 0) {
-            member.borrowBook(book);
-            book.borrowBook();
-            insertBorrowingRecordInDatabase(member, book);
-            return true; // Successful borrowing
-        } else {
-            return false; // Book is not available for borrowing
-        }
-    }
-
-    // Return a book for a member
-    public boolean returnBook(Member member, Book book) {
-        if (member.getBorrowedBooks().contains(book)) {
-            member.returnBook(book);
-            book.returnBook();
-            deleteBorrowingRecordFromDatabase(member, book);
-            return true; // Successful return
-        } else {
-            return false; // This book was not borrowed by the member
-        }
-    }
-
+    // Private methods to interact with the database
     private List<Book> getAllBooksFromDatabase() throws SQLException {
         List<Book> books = new ArrayList<>();
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Books");
              ResultSet rs = stmt.executeQuery()) {
-            if (!rs.isBeforeFirst()) { // Check if ResultSet is empty
+            if (!rs.isBeforeFirst()) {
                 System.out.println("No books found in the database.");
             }
             while (rs.next()) {
@@ -115,17 +166,13 @@ public class Library {
                 String publicationDate = rs.getString("publication_date");
                 int availableCopies = rs.getInt("available_copies");
                 int authorId = rs.getInt("author_id");
-    
-                // Debugging output
-                System.out.println("Title=" + title + ", Author ID=" + authorId);
-    
-                // Get author's name from the Authors table
+
                 String authorName = getAuthorNameFromDatabase(authorId);
                 if (authorName == null) {
                     System.err.println("Warning: No author found for author_id=" + authorId);
                     continue; // Skip this book if no author is found
                 }
-    
+
                 Author author = new Author(authorName);
                 Book book = new Book(title, author, isbn, publicationDate, availableCopies);
                 books.add(book);
@@ -134,30 +181,41 @@ public class Library {
             System.err.println("Error getting books from database: " + e.getMessage());
             throw e; // Rethrow the exception
         }
-        System.out.println("Books retrieved from the library: " + books.size());
         return books;
     }
-    
+
+        
     private List<Member> getAllMembersFromDatabase() throws SQLException {
         List<Member> members = new ArrayList<>();
+        String sql = "SELECT member_id, member_name FROM Members"; // Ensure the table and columns are correct
+    
         try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Members");
+             PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            if (!rs.isBeforeFirst()) { // Check if ResultSet is empty
+    
+            if (!rs.isBeforeFirst()) { // No data in ResultSet
                 System.out.println("No members found in the database.");
             }
+    
             while (rs.next()) {
-                String name = rs.getString("member_name");
-                Member member = new Member(name);
+                int memberId = rs.getInt("member_id"); // Adjust column name to match your table
+                String memberName = rs.getString("member_name");
+                
+                // Log fetched member details
+                System.out.println("Fetched member: ID=" + memberId + ", Name=" + memberName);
+    
+                // Ensure the Member class has an appropriate constructor
+                Member member = new Member(memberId, memberName);
                 members.add(member);
             }
         } catch (SQLException e) {
             System.err.println("Error getting members from database: " + e.getMessage());
-            throw e; // Rethrow the exception
+            throw e; // Rethrow exception for higher-level handling
         }
-        System.out.println("Members retrieved from the library: " + members.size());
+    
         return members;
     }
+    
 
     private String getAuthorNameFromDatabase(int authorId) {
         String authorName = null;
@@ -175,6 +233,46 @@ public class Library {
             System.err.println("Error getting author name from database: " + e.getMessage());
         }
         return authorName;
+    }
+
+    private void insertBookIntoDatabase(Book book) {
+        if (bookExistsInDatabase(book.getISBN())) {
+            System.out.println("Book with ISBN " + book.getISBN() + " already exists. Skipping insertion.");
+            return; // Skip insertion if the book already exists
+        }
+
+        try (Connection conn = databaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO Books (title, ISBN, publication_date, available_copies) VALUES (?, ?, ?, ?)")) {
+            stmt.setString(1, book.getTitle());
+            stmt.setString(2, book.getISBN());
+            stmt.setString(3, book.getPublicationDate());
+            stmt.setInt(4, book.getAvailableCopies());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error inserting book into database: " + e.getMessage());
+        }
+    }
+
+    private boolean bookExistsInDatabase(String isbn) {
+        try (Connection conn = databaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM Books WHERE ISBN = ?")) {
+            stmt.setString(1, isbn);
+            ResultSet rs = stmt.executeQuery();
+            return rs.getInt(1) > 0; // Return true if the book exists
+        } catch (SQLException e) {
+            System.err.println("Error checking if book exists in database: " + e.getMessage());
+        }
+        return false;
+    }
+
+    private void deleteBookFromDatabase(Book book) {
+        try (Connection conn = databaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("DELETE FROM Books WHERE book_id = ?")) {
+            stmt.setInt(1, book.getBookId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error deleting book from database: " + e.getMessage());
+        }
     }
 
     private void insertMemberIntoDatabase(Member member) {
@@ -197,102 +295,105 @@ public class Library {
         }
     }
 
-    private void insertBorrowingRecordInDatabase(Member member, Book book) {
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("INSERT INTO BorrowedBooks (book_id, member_id, borrow_date, return_date) VALUES (?, (SELECT member_id FROM members WHERE member_name = ?), ?, ?)")) {
-            stmt.setInt(1, book.getBookId()); // Book ID from the Book object
-            stmt.setString(2, member.getName()); // Member name to fetch member ID
-            stmt.setString(3, LocalDate.now().toString()); // Current date
-            stmt.setString(4, LocalDate.now().plusWeeks(2).toString()); // Due date
-            int rowsAffected = stmt.executeUpdate();
-            System.out.println("Inserted borrowing record, rows affected: " + rowsAffected);
+    // Example usage of the updateBook method
+    public void updateBookExampleUsage() {
+        try {
+            // Example: Update the available copies of a book
+            Book bookToUpdate = books.get(0);  // Assuming you have at least one book in the list
+            bookToUpdate.setAvailableCopies(bookToUpdate.getAvailableCopies() + 1);  // Increment the available copies
+            updateBook(bookToUpdate);
         } catch (SQLException e) {
-            System.err.println("Error inserting borrowing record: " + e.getMessage());
+            System.err.println("Error updating book: " + e.getMessage());
         }
     }
 
-    private void deleteBorrowingRecordFromDatabase(Member member, Book book) {
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("DELETE FROM BorrowedBooks WHERE book_id = ? AND member_id = (SELECT member_id FROM members WHERE member_name = ?)")) {
-            stmt.setInt(1, book.getBookId()); // Book ID from the Book object
-            stmt.setString(2, member.getName()); // Member name to fetch member ID
-            int rowsAffected = stmt.executeUpdate();
-            System.out.println("Deleted borrowing record, rows affected: " + rowsAffected);
-        } catch (SQLException e) {
-            System.err.println("Error deleting borrowing record: " + e.getMessage());
-        }
-    }
-    
-    private void insertBookIntoDatabase(Book book) {
-        // Check if the book already exists based on ISBN
-        if (bookExistsInDatabase(book.getISBN())) {
-            System.out.println("Book with ISBN " + book.getISBN() + " already exists. Skipping insertion.");
-            return; // Skip insertion if the book already exists
-        }
-    
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("INSERT INTO Books (title, ISBN, publication_date, available_copies) VALUES (?, ?, ?, ?)")) {
-            stmt.setString(1, book.getTitle());
-            stmt.setString(2, book.getISBN());
-            stmt.setString(3, book.getPublicationDate());
-            stmt.setInt(4, book.getAvailableCopies());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Error inserting book into database: " + e.getMessage());
+    public boolean borrowBook(Member member, Book book) {
+        if (book.getAvailableCopies() > 0) {
+            book.borrowBook(); // Decrease available copies
+            borrowedBooks.put(member, book); // Track borrowed book
+            return true;
+        } else {
+            System.out.println("Book is not available for borrowing.");
+            return false;
         }
     }
 
-    private boolean bookExistsInDatabase(String isbn) {
+        // Return a book
+        public void returnBook() {
+            Book selectedBook = (Book) bookComboBox.getSelectedItem();
+            Member selectedMember = (Member) memberComboBox.getSelectedItem();
+
+            if (selectedBook != null && selectedMember != null) {
+                selectedMember.returnBook(selectedBook); // Update in-memory state
+                deleteBorrowedRecordFromDatabase(selectedMember, selectedBook); // Remove from database
+                refreshTable(); // Update UI
+                JOptionPane.showMessageDialog(null, "Book returned successfully!");
+            } else {
+                JOptionPane.showMessageDialog(null, "Please select both a book and a member.");
+            }
+        }
+
+        // Insert record into the database when a book is borrowed
+        public void insertBorrowedRecordInDatabase(Member member, Book book) {
+            String sql = "INSERT INTO BorrowedBooks (member_id, book_id, borrow_date) VALUES (?, ?, ?)";
+            try (Connection conn = databaseConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, member.getMemberId());
+                stmt.setInt(2, book.getBookId());
+                stmt.setString(3, LocalDate.now().toString());
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                System.err.println("Error inserting borrowed record into database: " + e.getMessage());
+            }
+        }
+
+        // Delete record from the database when a book is returned
+        private void deleteBorrowedRecordFromDatabase(Member member, Book book) {
+            String sql = "DELETE FROM BorrowedBooks WHERE member_id = ? AND book_id = ?";
+            try (Connection conn = databaseConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, member.getMemberId());
+                stmt.setInt(2, book.getBookId());
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                System.err.println("Error deleting borrowed record from database: " + e.getMessage());
+            }
+        }
+
+    private void refreshTable() {
+        try {
+            transactionTable.setModel(new TransactionTableModel(getTransactionData()));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private List<Object[]> getTransactionData() throws SQLException {
+        return getAllTransactions();
+    }
+        
+
+    public List<Object[]> getAllTransactions() throws SQLException {
+        List<Object[]> transactions = new ArrayList<>();
+        String sql = "SELECT t.status AS transaction_type, m.member_name, b.title, t.borrow_date " +
+                     "FROM Transactions t " +
+                     "JOIN Members m ON t.member_id = m.member_id " +
+                     "JOIN Books b ON t.book_id = b.book_id";
         try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM Books WHERE ISBN = ?")) {
-            stmt.setString(1, isbn);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1) > 0; // Return true if at least one book exists with this ISBN
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                String transactionType = rs.getString("transaction_type");
+                String memberName = rs.getString("member_name");
+                String bookTitle = rs.getString("title");
+                String borrowDate = rs.getString("borrow_date");  // Or choose return_date based on your requirement
+                transactions.add(new Object[]{transactionType, memberName, bookTitle, borrowDate});
             }
         } catch (SQLException e) {
-            System.err.println("Error checking if book exists in database: " + e.getMessage());
+            System.err.println("Error fetching transactions: " + e.getMessage());
+            throw e;
         }
-        return false; // Return false if an error occurs or no book is found
-    }
-
-    private void deleteBookFromDatabase(Book book) {
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("DELETE FROM Books WHERE book_id = ?")) {
-            stmt.setInt(1, book.getBookId());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Error deleting book from database: " + e.getMessage());
-        }
-    }
-
-    // Method to get all transactions (borrowed books)
-public List<Object[]> getAllTransactions() throws SQLException {
-    List<Object[]> transactions = new ArrayList<>();
-    String query = "SELECT bb.borrow_id, bb.borrow_date, bb.return_date, " +
-                   "m.member_name, b.title " +
-                   "FROM BorrowedBooks bb " +
-                   "JOIN members m ON bb.member_id = m.member_id " +
-                   "JOIN Books b ON bb.book_id = b.book_id";
-
-    try (Connection conn = databaseConnection.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(query);
-         ResultSet rs = stmt.executeQuery()) {
-
-        while (rs.next()) {
-            Object[] transaction = new Object[5]; // Adjust size based on required fields
-            transaction[0] = rs.getInt("borrow_id"); // Borrow ID
-            transaction[1] = rs.getString("member_name"); // Member Name
-            transaction[2] = rs.getString("title"); // Book Title
-            transaction[3] = rs.getString("borrow_date"); // Borrow Date
-            transaction[4] = rs.getString("return_date"); // Return Date
-            transactions.add(transaction);
-        }
-    } catch (SQLException e) {
-        System.err.println("Error getting transactions from database: " + e.getMessage());
-        throw e; // Rethrow the exception for further handling
+        return transactions;
     }
     
-    return transactions;
-}
 }
