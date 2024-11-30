@@ -1,5 +1,6 @@
 com\library\management\classes\User.class
 com\library\management\gui\BooksPage$1.class
+com\library\management\gui\MembersPage$5.class
 com\library\management\gui\MembersPage.class
 com\library\management\gui\TransactionsPage$3.class
 com\library\management\gui\TransactionsPage.class
@@ -12,6 +13,7 @@ com\library\management\classes\Library.class
 com\library\management\database\databaseConnection.class
 com\library\management\gui\BooksPage$4.class
 com\library\management\classes\Book.class
+com\library\management\gui\BooksPage$5.class
 com\library\management\gui\MembersPage$4.class
 com\library\management\gui\TransactionsPage$1.class
 com\library\management\classes\Author.class
