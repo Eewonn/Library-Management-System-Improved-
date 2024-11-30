@@ -7,6 +7,8 @@ import com.library.management.classes.Library;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.sql.SQLException;
@@ -20,7 +22,7 @@ public class TransactionsPage extends LibraryDashboard {
     private static final Color TABLE_BACKGROUND_COLOR = new Color(60, 106, 117);
     private static final Color BUTTON_COLOR = new Color(80, 120, 130);
     private static final Color COMBOBOX_COLOR = new Color(240, 240, 240);
-    
+
     // Attributes
     private JComboBox<Book> booksComboBox;
     private JComboBox<Member> membersComboBox;
@@ -57,7 +59,7 @@ public class TransactionsPage extends LibraryDashboard {
     // GUI SET UP METHODS
     private void setupUI() {
         JPanel mainPanel = new JPanel(new BorderLayout());
-        
+
         // Create dropdowns for selecting books and members
         booksComboBox = new JComboBox<>();
         membersComboBox = new JComboBox<>();
@@ -105,7 +107,6 @@ public class TransactionsPage extends LibraryDashboard {
         comboBox.setForeground(Color.BLACK);
         comboBox.setBorder(BorderFactory.createLineBorder(TABLE_HEADER_COLOR));
     }
-
 
     // Load books and members from the database
     private void loadBooksAndMembers() {
@@ -160,10 +161,9 @@ public class TransactionsPage extends LibraryDashboard {
     private void borrowBook() {
         Book selectedBook = (Book) booksComboBox.getSelectedItem();
         Member selectedMember = (Member) membersComboBox.getSelectedItem();
-    
+
         if (selectedBook != null && selectedMember != null) {
             try {
-                System.out.println("Borrowing book ID: " + selectedBook.getBookId()); // Debugging statement
                 if (library.borrowBook(selectedMember, selectedBook)) {
                     loadTransactionsFromDatabase();
                     JOptionPane.showMessageDialog(this, selectedMember.getName() + " borrowed " + selectedBook.getTitle());
@@ -178,7 +178,6 @@ public class TransactionsPage extends LibraryDashboard {
         }
     }
 
-    // Modify returnBook to update database and refresh transactions
     private void returnBook() {
         Book selectedBook = (Book) booksComboBox.getSelectedItem();
         Member selectedMember = (Member) membersComboBox.getSelectedItem();
@@ -220,18 +219,35 @@ public class TransactionsPage extends LibraryDashboard {
                 Component c = super.prepareRenderer(renderer, row, column);
                 c.setBackground(TABLE_BACKGROUND_COLOR);
                 c.setForeground(TABLE_TEXT_COLOR);
+
+                if (c instanceof JLabel) {
+                    ((JLabel) c).setHorizontalAlignment(SwingConstants.CENTER); // Center align text
+                }
                 return c;
             }
         };
-        // Set table color
-        table.getTableHeader().setBackground(TABLE_HEADER_COLOR);
-        table.getTableHeader().setForeground(TABLE_TEXT_COLOR);
-        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 18));
+
+        // Set table header renderer for center alignment
+        JTableHeader header = table.getTableHeader();
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                label.setHorizontalAlignment(SwingConstants.CENTER); // Center align header text
+                label.setBackground(TABLE_HEADER_COLOR);
+                label.setForeground(TABLE_TEXT_COLOR);
+                label.setFont(new Font("Arial", Font.BOLD, 18));
+                return label;
+            }
+        });
+
+        // Set other table properties
         table.setFont(new Font("Arial", Font.PLAIN, 16));
         table.setRowHeight(30);
-        table.getTableHeader().setBorder(new LineBorder(Color.BLACK, 1));
         table.setBackground(TABLE_BACKGROUND_COLOR);
         table.setForeground(TABLE_TEXT_COLOR);
+        table.getTableHeader().setBorder(new LineBorder(Color.BLACK, 1));
+
         return table;
     }
 }
