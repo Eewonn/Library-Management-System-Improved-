@@ -7,7 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class Book {
+public class Book implements LibraryItem{
     private int bookId;
     private String title;
     private Author author;
@@ -101,6 +101,7 @@ public class Book {
     }
 
     // Methods for borrowing and returning books
+    @Override
     public void borrowBook() {
         if (availableCopies > 0) {
             availableCopies--;
@@ -110,6 +111,7 @@ public class Book {
         }
     }
 
+    @Override
     public void returnBook() {
         availableCopies++;
         updateBookInDatabase();
