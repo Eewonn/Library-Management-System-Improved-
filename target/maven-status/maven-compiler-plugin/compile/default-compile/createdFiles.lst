@@ -19,6 +19,7 @@ com\library\management\gui\TransactionsPage$1.class
 com\library\management\classes\Author.class
 com\library\management\gui\BooksPage$2.class
 com\library\management\gui\MembersPage$1.class
+com\library\management\classes\LibraryItem.class
 com\library\management\gui\LibraryDashboard$1.class
 com\library\management\gui\BooksPage$3.class
 com\library\management\gui\BooksPage.class

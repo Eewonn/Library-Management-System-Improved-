@@ -3,7 +3,7 @@
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
   <jar>C:\Users\Eron\Desktop\Finals OOP Test\library-management-system\target\library-management-system-1.0-SNAPSHOT.jar</jar>
-  <outfile>C:\Users\Eron\Desktop\Finals OOP Test\library-management-system\library-management-system.exe</outfile>
+  <outfile>C:\Users\Eron\Desktop\Finals OOP Test\library-management-system\Library Management System.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
