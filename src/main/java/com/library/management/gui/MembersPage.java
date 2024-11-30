@@ -27,6 +27,7 @@ public class MembersPage extends LibraryDashboard {
     private static final Color TABLE_TEXT_COLOR = Color.WHITE;
     private static final Color TABLE_HEADER_COLOR = new Color(60, 106, 117);
     private static final Color TABLE_BACKGROUND_COLOR = new Color(60, 106, 117);
+    private static final Color PLACEHOLDER_COLOR = Color.GRAY;
 
     // Attributes
     private JTable membersTable;
@@ -52,9 +53,27 @@ public class MembersPage extends LibraryDashboard {
         membersTable = createMembersTable();
 
         // Create a search bar
-        JTextField searchField = new JTextField();
+        JTextField searchField = new JTextField("Search by Member Name");
         searchField.setToolTipText("Search by Member Name");
         searchField.setPreferredSize(new Dimension(200, 30));
+        searchField.setForeground(PLACEHOLDER_COLOR);
+
+        searchField.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (searchField.getText().equals("Search by Member Name")) {
+                    searchField.setForeground(Color.BLACK);
+                    searchField.setText("");
+                }
+            }
+        
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (searchField.getText().isEmpty()) {
+                    searchField.setForeground(PLACEHOLDER_COLOR); // Reset to placeholder color
+                    searchField.setText("Search by Member Name");
+                }
+            }
+        });
+
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {

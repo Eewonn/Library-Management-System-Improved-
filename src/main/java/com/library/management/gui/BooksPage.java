@@ -25,6 +25,7 @@ public class BooksPage extends LibraryDashboard {
     private static final Color TABLE_TEXT_COLOR = Color.WHITE;
     private static final Color TABLE_HEADER_COLOR = new Color(60, 106, 117);
     private static final Color TABLE_BACKGROUND_COLOR = new Color(60, 106, 117);
+    private static final Color PLACEHOLDER_COLOR = Color.GRAY;
 
     // Attributes
     private JTable booksTable;
@@ -51,9 +52,27 @@ public class BooksPage extends LibraryDashboard {
         booksTable = createBooksTable();
 
         // Create a search bar
-        searchField = new JTextField();
+        searchField = new JTextField("Search by Title or Author");
         searchField.setToolTipText("Search by Title or Author");
         searchField.setPreferredSize(new Dimension(200, 30));
+        searchField.setForeground(PLACEHOLDER_COLOR);
+
+        searchField.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (searchField.getText().equals("Search by Title or Author")) {
+                    searchField.setForeground(Color.BLACK);
+                    searchField.setText("");
+                }
+            }
+        
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (searchField.getText().isEmpty()) {
+                    searchField.setForeground(PLACEHOLDER_COLOR); // Reset to placeholder color
+                    searchField.setText("Search by Title or Author");
+                }
+            }
+        });
+        
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {

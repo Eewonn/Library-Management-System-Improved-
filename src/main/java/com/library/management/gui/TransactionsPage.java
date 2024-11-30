@@ -21,6 +21,7 @@ public class TransactionsPage extends LibraryDashboard {
     private static final Color TABLE_HEADER_COLOR = new Color(60, 106, 117);
     private static final Color TABLE_BACKGROUND_COLOR = new Color(60, 106, 117);
     private static final Color BUTTON_COLOR = new Color(80, 120, 130);
+    private static final Color PLACEHOLDER_COLOR = Color.GRAY;
     
     // Attributes
     private JComboBox<Book> booksComboBox;
