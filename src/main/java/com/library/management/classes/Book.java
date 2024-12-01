@@ -32,16 +32,16 @@ public class Book implements LibraryItem{
         this.ISBN = ISBN;
         this.publicationDate = publicationDate;
         this.availableCopies = availableCopies;
-        this.bookId = -1; // Initially set to -1 since it hasn't been saved to the database yet
+        this.bookId = -1;
     }
 
     // Method to save the book to the database
     public boolean save() {
-        if (this.bookId == -1) { // Only insert if bookId is not set
+        if (this.bookId == -1) {
             this.bookId = insertBookIntoDatabase();
-            return this.bookId != -1; // Return true if insertion was successful
+            return this.bookId != -1;
         }
-        return true; // Already saved
+        return true;
     }
 
     // Getters
@@ -163,7 +163,7 @@ public class Book implements LibraryItem{
              PreparedStatement resetStmt = conn.prepareStatement(resetSequenceQuery)) {
             deleteStmt.setInt(1, bookId);
             deleteStmt.executeUpdate();
-            resetStmt.executeUpdate();  // Reset the book sequence
+            resetStmt.executeUpdate();  
         } catch (SQLException e) {
             System.err.println("Error deleting book: " + e.getMessage());
         }

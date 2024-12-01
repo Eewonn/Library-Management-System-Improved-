@@ -73,10 +73,10 @@ public class Library {
     // Borrow and return book methods
     public boolean borrowBook(Member member, Book book) {
         if (books.contains(book) && book.getAvailableCopies() > 0 && member != null) {
-            Connection conn = null; // Declare Connection outside try block
+            Connection conn = null; 
             try {
                 conn = databaseConnection.getConnection();
-                conn.setAutoCommit(false); // Start transaction
+                conn.setAutoCommit(false);
 
                 // Decrease available copies of the book
                 String updateBookQuery = "UPDATE Books SET available_copies = available_copies - 1 WHERE book_id = ?";
@@ -86,33 +86,33 @@ public class Library {
                 }
 
                 // Insert borrowing record
-                insertBorrowingRecordInDatabase(member, book, conn); // Pass connection for transaction management
+                insertBorrowingRecordInDatabase(member, book, conn);
 
-                conn.commit(); // Commit transaction
-                member.borrowBook(book); // Update member's borrowed books
-                return true; // Successful borrowing
+                conn.commit();
+                member.borrowBook(book); 
+                return true; 
             } catch (SQLException e) {
                 System.err.println("Error during borrowing book: " + e.getMessage());
-                // Handle rollback in case of error
+               
                 if (conn != null) {
                     try {
-                        conn.rollback(); // Rollback transaction
+                        conn.rollback(); 
                     } catch (SQLException rollbackEx) {
                         System.err.println("Error during rollback: " + rollbackEx.getMessage());
                     }
                 }
-                return false; // Failed to borrow
+                return false;
             } finally {
                 if (conn != null) {
                     try {
-                        conn.close(); // Close connection
+                        conn.close(); 
                     } catch (SQLException closeEx) {
                         System.err.println("Error closing connection: " + closeEx.getMessage());
                     }
                 }
             }
         } else {
-            return false; // Book is not available for borrowing
+            return false; 
         }
     }
 
@@ -120,7 +120,7 @@ public class Library {
         Connection conn = null;
         try {
             conn = databaseConnection.getConnection();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false); 
 
             // Check if the book is actually borrowed by the member
             String checkBorrowQuery = "SELECT COUNT(*) FROM BorrowedBooks bb " +
@@ -150,18 +150,18 @@ public class Library {
             // Delete the borrowing record
             deleteBorrowingRecordFromDatabase(member, book, conn);
 
-            conn.commit(); // Commit transaction
+            conn.commit();
 
             // Update member's and book's internal state
             member.returnBook(book);
             book.returnBook();
 
-            return true; // Successful return
+            return true; 
         } catch (SQLException e) {
             System.err.println("Error during returning book: " + e.getMessage());
             if (conn != null) {
                 try {
-                    conn.rollback(); // Rollback transaction
+                    conn.rollback();
                 } catch (SQLException rollbackEx) {
                     System.err.println("Error during rollback: " + rollbackEx.getMessage());
                 }
@@ -170,7 +170,7 @@ public class Library {
         } finally {
             if (conn != null) {
                 try {
-                    conn.close(); // Close connection
+                    conn.close(); 
                 } catch (SQLException closeEx) {
                     System.err.println("Error closing connection: " + closeEx.getMessage());
                 }
@@ -184,7 +184,7 @@ public class Library {
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Books");
              ResultSet rs = stmt.executeQuery()) {
-            if (!rs.isBeforeFirst()) { // Check if ResultSet is empty
+            if (!rs.isBeforeFirst()) { 
                 System.out.println("No books found in the database.");
             }
             while (rs.next()) {
@@ -199,7 +199,7 @@ public class Library {
                 String authorName = getAuthorNameFromDatabase(authorId);
                 if (authorName == null) {
                     System.err.println("Warning: No author found for author_id=" + authorId);
-                    continue; // Skip this book if no author is found
+                    continue; 
                 }
 
                 Author author = new Author(authorName);
@@ -208,7 +208,7 @@ public class Library {
             }
         } catch (SQLException e) {
             System.err.println("Error getting books from database: " + e.getMessage());
-            throw e; // Rethrow the exception
+            throw e;
         }
         return books;
     }
@@ -218,7 +218,7 @@ public class Library {
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Members");
              ResultSet rs = stmt.executeQuery()) {
-            if (!rs.isBeforeFirst()) { // Check if ResultSet is empty
+            if (!rs.isBeforeFirst()) { 
                 System.out.println("No members found in the database.");
             }
             while (rs.next()) {
@@ -228,7 +228,7 @@ public class Library {
             }
         } catch (SQLException e) {
             System.err.println("Error getting members from database: " + e.getMessage());
-            throw e; // Rethrow the exception
+            throw e; 
         }
         return members;
     }

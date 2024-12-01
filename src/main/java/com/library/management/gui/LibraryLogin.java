@@ -114,8 +114,8 @@ public class LibraryLogin extends JFrame {
                     try {
                         if (get()) {
                             User loggedInUser  = new User(username);
-                            new LibraryDashboard(loggedInUser ).setVisible(true); // Pass the library instance
-                            dispose(); // Close the login window
+                            new LibraryDashboard(loggedInUser ).setVisible(true);
+                            dispose(); 
                         } else {
                             JOptionPane.showMessageDialog(LibraryLogin.this, "Invalid username or password", "Login Error", JOptionPane.ERROR_MESSAGE);
                         }
@@ -126,7 +126,7 @@ public class LibraryLogin extends JFrame {
                 }
             };
 
-            worker.execute(); // Start the background task
+            worker.execute();
         });
         
         gbc.gridy = 3;

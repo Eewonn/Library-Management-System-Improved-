@@ -41,7 +41,7 @@ public class MembersPage extends LibraryDashboard {
         memberList = new ArrayList<>();
         setTitle("Members Management");
         setupUI();
-        loadMembersFromDatabase(); // Load members from the database
+        loadMembersFromDatabase();
         setVisible(true);
     }
 
@@ -68,7 +68,7 @@ public class MembersPage extends LibraryDashboard {
         
             public void focusLost(java.awt.event.FocusEvent evt) {
                 if (searchField.getText().isEmpty()) {
-                    searchField.setForeground(PLACEHOLDER_COLOR); // Reset to placeholder color
+                    searchField.setForeground(PLACEHOLDER_COLOR); 
                     searchField.setText("Search by Member Name");
                 }
             }
@@ -95,7 +95,7 @@ public class MembersPage extends LibraryDashboard {
         JPanel searchPanel = new JPanel(new BorderLayout());
         searchPanel.add(new JLabel("Search: "), BorderLayout.WEST);
         searchPanel.add(searchField, BorderLayout.CENTER);
-        searchPanel.setBorder(BorderFactory.createEmptyBorder(10, 150, 0, 150)); // Add padding
+        searchPanel.setBorder(BorderFactory.createEmptyBorder(10, 150, 0, 150));
 
         // Create a JScrollPane for the table
         JScrollPane scrollPane = new JScrollPane(membersTable);
@@ -129,26 +129,26 @@ public class MembersPage extends LibraryDashboard {
         
         // Filter the member list based on the search query
         for (Member member : memberList) {
-            String memberName = member.getName().toLowerCase(); // Convert member's name to lowercase
+            String memberName = member.getName().toLowerCase(); 
             
             // Check if the member's name contains the search query
             if (memberName.contains(lowerCaseQuery)) {
                 // Convert the borrowedBooks list to a list of titles
                 List<String> borrowedBookTitles = member.getBorrowedBooks()
                                                         .stream()
-                                                        .map(Book::getTitle) // Map each book to its title
-                                                        .toList(); // Collect into a list
+                                                        .map(Book::getTitle) 
+                                                        .toList(); 
                 
                 // Create a string representation of borrowed books
                 String borrowedBooks = borrowedBookTitles.isEmpty() 
-                    ? "No borrowed books" // If no books are borrowed
-                    : String.join(", ", borrowedBookTitles); // Join titles with a comma
+                    ? "No borrowed books" 
+                    : String.join(", ", borrowedBookTitles); 
     
                 // Add the member's details to the table model
                 tableModel.addRow(new Object[] {
                     member.getMemberId(),
                     member.getName(),
-                    borrowedBooks // Display borrowed books correctly
+                    borrowedBooks 
                 });
             }
         }
@@ -202,16 +202,16 @@ public class MembersPage extends LibraryDashboard {
         verticalScrollBar.setUI(new BasicScrollBarUI() {
             @Override
             protected void configureScrollBarColors() {
-                this.thumbColor = THEME_COLOR; // Set the color of the scrollbar thumb
-                this.trackColor = Color.WHITE; // Set the color of the scrollbar track
+                this.thumbColor = THEME_COLOR; 
+                this.trackColor = Color.WHITE; 
             }
         });
 
         horizontalScrollBar.setUI(new BasicScrollBarUI() {
             @Override
             protected void configureScrollBarColors() {
-                this.thumbColor = THEME_COLOR; // Set the color of the scrollbar thumb
-                this.trackColor = Color.WHITE; // Set the color of the scrollbar track
+                this.thumbColor = THEME_COLOR; 
+                this.trackColor = Color.WHITE; 
             }
         });
     }
@@ -249,7 +249,7 @@ public class MembersPage extends LibraryDashboard {
         buttonPanel.add(updateButton);
 
         // Add padding to the bottom of the button panel
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0)); // 10px padding at the bottom
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0)); 
 
         return buttonPanel;
     }
@@ -324,7 +324,7 @@ public class MembersPage extends LibraryDashboard {
                      "FROM members m " +
                      "LEFT JOIN BorrowedBooks bb ON m.member_id = bb.member_id " +
                      "LEFT JOIN Books b ON bb.book_id = b.book_id " +
-                     "GROUP BY m.member_id, m.member_name"; // Updated query to include borrowed books
+                     "GROUP BY m.member_id, m.member_name"; 
 
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -342,7 +342,7 @@ public class MembersPage extends LibraryDashboard {
 
                 // Create Member and display in the table
                 memberList.add(new Member(memberId, memberName, borrowedBooks));
-                tableModel.addRow(new Object[]{memberId, memberName, borrowedBooks}); // Add member data to the table
+                tableModel.addRow(new Object[]{memberId, memberName, borrowedBooks}); 
             }
         } catch (SQLException e) {
             showError("Error loading members from database: " + e.getMessage());
@@ -354,12 +354,12 @@ public class MembersPage extends LibraryDashboard {
         if (validateInputs()) {
             String name = inputFields.get(0).getText();
             Member newMember = new Member(name);
-            int generatedId = insertMemberIntoDatabase(newMember); // Get the generated ID
+            int generatedId = insertMemberIntoDatabase(newMember); 
             
-            if (generatedId != -1) { // Check if the insertion was successful
-                newMember.setMemberId(generatedId); // Set the generated member ID
+            if (generatedId != -1) { 
+                newMember.setMemberId(generatedId); 
                 memberList.add(newMember);
-                tableModel.addRow(new Object[]{generatedId, name, "No borrowed books"}); // Add member data to the table
+                tableModel.addRow(new Object[]{generatedId, name, "No borrowed books"}); 
                 clearFields();
             } else {
                 showError("Failed to add member to the database.");
@@ -372,7 +372,7 @@ public class MembersPage extends LibraryDashboard {
         int selectedRow = membersTable.getSelectedRow();
         if (selectedRow != -1) {
             String name = inputFields.get(0).getText();
-            memberList.get(selectedRow).setName(name); // Assuming setName method exists in Member class
+            memberList.get(selectedRow).setName(name); 
             tableModel.setValueAt(name, selectedRow, 1);
             updateMemberInDatabase(member);
             clearFields();
@@ -383,9 +383,9 @@ public class MembersPage extends LibraryDashboard {
 
     // Remove member from the table
     private void removeMember() {
-        int selectedRow = membersTable.getSelectedRow(); // Get the selected row
+        int selectedRow = membersTable.getSelectedRow(); 
         if (selectedRow != -1) {
-            Member memberToRemove = memberList.get(selectedRow); // Get the member object
+            Member memberToRemove = memberList.get(selectedRow); 
 
             // Confirm deletion from the user
             int confirm = JOptionPane.showConfirmDialog(
@@ -399,7 +399,7 @@ public class MembersPage extends LibraryDashboard {
                 if (removeMemberFromDatabase(memberToRemove)) {
                     // If successful, remove from list and table
                     memberList.remove(selectedRow);
-                    tableModel.removeRow(selectedRow); // Remove from JTable
+                    tableModel.removeRow(selectedRow); 
                     JOptionPane.showMessageDialog(this, "Member removed successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
@@ -412,7 +412,7 @@ public class MembersPage extends LibraryDashboard {
         String sql = "DELETE FROM members WHERE member_id = ?";
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, memberToRemove.getMemberId()); // Set the member_id parameter
+            pstmt.setInt(1, memberToRemove.getMemberId()); 
             int rowsDeleted = pstmt.executeUpdate();
 
             if (rowsDeleted > 0) {
@@ -423,7 +423,7 @@ public class MembersPage extends LibraryDashboard {
         } catch (SQLException e) {
             showError("Error removing member from database: " + e.getMessage());
         }
-        return false; // Return false if an error occurred or no rows were deleted
+        return false; 
     }
 
     // Database Methods
@@ -437,20 +437,20 @@ public class MembersPage extends LibraryDashboard {
             // Retrieve the generated member ID
             ResultSet generatedKeys = pstmt.getGeneratedKeys();
             if (generatedKeys.next()) {
-                return generatedKeys.getInt(1); // Return the generated member ID
+                return generatedKeys.getInt(1); 
             }
         } catch (SQLException e) {
             showError("Error adding member to database: " + e.getMessage());
         }
-        return -1; // Return -1 if an error occurred
+        return -1; 
     }
 
     private void updateMemberInDatabase(Member member) {
         String sql = "UPDATE members SET member_name = ? WHERE member_id = ?";
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, member.getName()); // Set the new name
-            pstmt.setInt(2, member.getMemberId()); // Identify the record by member_id
+            pstmt.setString(1, member.getName()); 
+            pstmt.setInt(2, member.getMemberId()); 
             int rowsUpdated = pstmt.executeUpdate();
 
             if (rowsUpdated > 0) {

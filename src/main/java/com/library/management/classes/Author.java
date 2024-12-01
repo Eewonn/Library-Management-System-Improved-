@@ -52,7 +52,7 @@ public class Author extends Person {
             stmt.setInt(1, authorId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                setName(rs.getString("name")); // Set the name using the setter
+                setName(rs.getString("name"));
             }
         } catch (SQLException e) {
             System.err.println("Error loading author from database: " + e.getMessage());

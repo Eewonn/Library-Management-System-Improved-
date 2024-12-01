@@ -12,8 +12,8 @@ import java.nio.file.StandardCopyOption;
 import java.io.InputStream;
 
 public class databaseConnection {
-    private static final String LOCAL_URL = "jdbc:sqlite:src/main/resources/library.db"; // Adjusted for resources
-    private static final String RESOURCE_DB_PATH = "/library.db"; // Path inside resources
+    private static final String LOCAL_URL = "jdbc:sqlite:src/main/resources/library.db"; 
+    private static final String RESOURCE_DB_PATH = "/library.db";
 
     // SQL Queries
     private static final String SQL_AUTHENTICATE_USER = "SELECT * FROM users WHERE username = ? AND password = ?";
@@ -33,7 +33,7 @@ public class databaseConnection {
                 return DriverManager.getConnection(LOCAL_URL);
             }
         } catch (Exception e) {
-            e.printStackTrace(); // Print the stack trace for debugging
+            e.printStackTrace(); 
             throw new SQLException(e);
         }
     }
@@ -60,7 +60,7 @@ public class databaseConnection {
             String jdbcUrl = "jdbc:sqlite:" + tempDbPath.toAbsolutePath().toString();
             return DriverManager.getConnection(jdbcUrl);
         } catch (Exception e) {
-            e.printStackTrace(); // Print the stack trace for debugging
+            e.printStackTrace(); 
             throw new SQLException(e);
         }
     }
@@ -70,7 +70,7 @@ public class databaseConnection {
             try {
                 connection.close();
             } catch (SQLException e) {
-                e.printStackTrace(); // Print the stack trace for debugging
+                e.printStackTrace();
             }
         }
     }
@@ -83,7 +83,7 @@ public class databaseConnection {
             ResultSet resultSet = statement.executeQuery();
             return resultSet.next();
         } catch (SQLException e) {
-            e.printStackTrace(); // Print the stack trace for debugging
+            e.printStackTrace(); 
             return false;
         }
     }
@@ -96,7 +96,7 @@ public class databaseConnection {
             pstmt.executeUpdate();
             System.out.println("Member added successfully.");
         } catch (SQLException e) {
-            e.printStackTrace(); // Print the stack trace for debugging
+            e.printStackTrace(); 
         }
     }
 
@@ -109,7 +109,7 @@ public class databaseConnection {
             pstmt.executeUpdate();
             System.out.println("Member updated successfully.");
         } catch (SQLException e) {
-            e.printStackTrace(); // Print the stack trace for debugging
+            e.printStackTrace(); 
         }
     }
 
@@ -119,7 +119,7 @@ public class databaseConnection {
             pstmt.executeUpdate();
             System.out.println("Member deleted successfully.");
         } catch (SQLException e) {
-            e.printStackTrace(); // Print the stack trace for debugging
+            e.printStackTrace(); 
         }
     }
 
@@ -135,7 +135,7 @@ public class databaseConnection {
                                    rs.getString("phone"));
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Print the stack trace for debugging
+            e.printStackTrace(); 
         }
     }
 }

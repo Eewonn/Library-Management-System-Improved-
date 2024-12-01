@@ -67,7 +67,7 @@ public class BooksPage extends LibraryDashboard {
         
             public void focusLost(java.awt.event.FocusEvent evt) {
                 if (searchField.getText().isEmpty()) {
-                    searchField.setForeground(PLACEHOLDER_COLOR); // Reset to placeholder color
+                    searchField.setForeground(PLACEHOLDER_COLOR); 
                     searchField.setText("Search by Title or Author");
                 }
             }
@@ -94,7 +94,7 @@ public class BooksPage extends LibraryDashboard {
         JPanel searchPanel = new JPanel(new BorderLayout());
         searchPanel.add(new JLabel("Search: "), BorderLayout.WEST);
         searchPanel.add(searchField, BorderLayout.CENTER);
-        searchPanel.setBorder(BorderFactory.createEmptyBorder(10, 150, 0, 150)); // Add padding around the search panel
+        searchPanel.setBorder(BorderFactory.createEmptyBorder(10, 150, 0, 150)); 
 
         // Create a JScrollPane for the table
         JScrollPane scrollPane = new JScrollPane(booksTable);
@@ -151,11 +151,11 @@ public class BooksPage extends LibraryDashboard {
         table.getTableHeader().setForeground(TABLE_TEXT_COLOR);
 
         // Set font size for the table header
-        Font headerFont = new Font("Arial", Font.BOLD, 18); // Change 16 to your desired font size
+        Font headerFont = new Font("Arial", Font.BOLD, 18); 
         table.getTableHeader().setFont(headerFont);
 
         // Set font size for the table
-        Font tableFont = new Font("Arial", Font.PLAIN , 16); // Change 14 to your desired font size
+        Font tableFont = new Font("Arial", Font.PLAIN , 16); 
         table.setFont(tableFont);
 
         table.setRowHeight(30);
@@ -175,16 +175,16 @@ public class BooksPage extends LibraryDashboard {
         verticalScrollBar.setUI(new BasicScrollBarUI() {
             @Override
             protected void configureScrollBarColors() {
-                this.thumbColor = THEME_COLOR; // Set the color of the scrollbar thumb
-                this.trackColor = Color.WHITE; // Set the color of the scrollbar track
+                this.thumbColor = THEME_COLOR; 
+                this.trackColor = Color.WHITE; 
             }
         });
 
         horizontalScrollBar.setUI(new BasicScrollBarUI() {
             @Override
             protected void configureScrollBarColors() {
-                this.thumbColor = THEME_COLOR; // Set the color of the scrollbar thumb
-                this.trackColor = Color.WHITE; // Set the color of the scrollbar track
+                this.thumbColor = THEME_COLOR;
+                this.trackColor = Color.WHITE; 
             }
         });
     }
@@ -225,7 +225,7 @@ public class BooksPage extends LibraryDashboard {
         buttonPanel.add(updateButton);
 
         // Add padding to the bottom of the button panel
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0)); // 10px padding at the bottom
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0)); 
 
         return buttonPanel;
     }
@@ -293,17 +293,17 @@ public class BooksPage extends LibraryDashboard {
     // Add the filterBooks method
     private void filterBooks() {
         String query = searchField.getText().toLowerCase();
-        tableModel.setRowCount(0); // Clear the table
+        tableModel.setRowCount(0); 
 
         for (Book book : bookList) {
-            String title = book.getTitle().toLowerCase(); // Convert title to lowercase for comparison
-            String authorName = book.getAuthor() != null ? book.getAuthor().getName().toLowerCase() : ""; // Convert author name to lowercase for comparison
+            String title = book.getTitle().toLowerCase(); 
+            String authorName = book.getAuthor() != null ? book.getAuthor().getName().toLowerCase() : ""; 
 
             // Check if the book matches the search query
             if (title.contains(query) || authorName.contains(query)) {
                 tableModel.addRow(new Object[]{
                     book.getTitle(), // Original title
-                    book.getAuthor() != null ? book.getAuthor().getName() : "", // Original author name
+                    book.getAuthor() != null ? book.getAuthor().getName() : "", 
                     book.getISBN(),
                     book.getPublicationDate(),
                     book.getAvailableCopies()

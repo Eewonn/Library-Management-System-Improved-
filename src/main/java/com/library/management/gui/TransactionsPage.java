@@ -51,7 +51,7 @@ public class TransactionsPage extends LibraryDashboard {
         } catch (SQLException e) {
             System.err.println("Error initializing Library: " + e.getMessage());
             JOptionPane.showMessageDialog(null, "Failed to initialize the library: " + e.getMessage());
-            return null; // Return null if initialization fails
+            return null; 
         }
     }
 
@@ -66,8 +66,8 @@ public class TransactionsPage extends LibraryDashboard {
         customizeComboBox(membersComboBox);
 
         // Set preferred size to adjust height
-        booksComboBox.setPreferredSize(new Dimension(350, 30)); // Adjust width and height as needed
-        membersComboBox.setPreferredSize(new Dimension(250, 30)); // Adjust width and height as needed
+        booksComboBox.setPreferredSize(new Dimension(350, 30)); 
+        membersComboBox.setPreferredSize(new Dimension(250, 30)); 
 
         // Create buttons for borrowing and returning books
         JButton borrowButton = createCustomButton("Borrow Book");
@@ -170,7 +170,7 @@ public class TransactionsPage extends LibraryDashboard {
     
         if (selectedBook != null && selectedMember != null) {
             try {
-                System.out.println("Borrowing book ID: " + selectedBook.getBookId()); // Debugging statement
+                System.out.println("Borrowing book ID: " + selectedBook.getBookId()); 
                 if (library.borrowBook(selectedMember, selectedBook)) {
                     loadTransactionsFromDatabase();
                     JOptionPane.showMessageDialog(this, selectedMember.getName() + " borrowed " + selectedBook.getTitle());
@@ -261,16 +261,16 @@ public class TransactionsPage extends LibraryDashboard {
         verticalScrollBar.setUI(new BasicScrollBarUI() {
             @Override
             protected void configureScrollBarColors() {
-                this.thumbColor = TABLE_HEADER_COLOR; // Set the color of the scrollbar thumb
-                this.trackColor = Color.WHITE; // Set the color of the scrollbar track
+                this.thumbColor = TABLE_HEADER_COLOR; 
+                this.trackColor = Color.WHITE; 
             }
         });
 
         horizontalScrollBar.setUI(new BasicScrollBarUI() {
             @Override
             protected void configureScrollBarColors() {
-                this.thumbColor = TABLE_HEADER_COLOR; // Set the color of the scrollbar thumb
-                this.trackColor = Color.WHITE; // Set the color of the scrollbar track
+                this.thumbColor = TABLE_HEADER_COLOR; 
+                this.trackColor = Color.WHITE; 
             }
         });
     }

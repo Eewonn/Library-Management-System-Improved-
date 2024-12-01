@@ -14,7 +14,7 @@ public class Member extends Person {
 
     // Constructors
     public Member(int memberId, String name, String borrowedBooks) {
-        super(name); // Assuming Person has a constructor that accepts name
+        super(name);
         this.memberId = memberId;
         this.borrowedBooks = new ArrayList<>();
         
@@ -22,7 +22,7 @@ public class Member extends Person {
         if (borrowedBooks != null && !borrowedBooks.isEmpty()) {
             String[] titles = borrowedBooks.split(", ");
             for (String title : titles) {
-                Book book = findBookByTitle(title); // You need to implement this method
+                Book book = findBookByTitle(title); 
                 if (book != null) {
                     this.borrowedBooks.add(book);
                 }
@@ -102,8 +102,7 @@ public class Member extends Person {
             stmt.setString(1, title);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                // Assuming you have a way to get the Author object (this can be modified as needed)
-                Author author = null; // Implement logic to retrieve the Author if needed
+                Author author = null; 
                 String ISBN = rs.getString("ISBN");
                 String publicationDate = rs.getString("publication_date");
                 int availableCopies = rs.getInt("available_copies");
@@ -113,7 +112,7 @@ public class Member extends Person {
         } catch (SQLException e) {
             System.err.println("Error finding book by title: " + e.getMessage());
         }
-        return null; // Return null if the book is not found
+        return null;
     }
 
     // Method to borrow a book

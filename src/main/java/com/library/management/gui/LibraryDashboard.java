@@ -49,7 +49,7 @@ public class LibraryDashboard extends JFrame {
         add(sidebar, BorderLayout.WEST);
         add(mainPanel, BorderLayout.CENTER);
 
-        // Call Update Count Method (Count for Books and Authors)
+        // Call Update Count Method 
         updateCounts();
 
         setVisible(true);
